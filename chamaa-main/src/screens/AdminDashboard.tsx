@@ -49,9 +49,17 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   return (
     <div className="min-h-[100dvh] bg-ink-50 text-ink-900">
       <header className="border-b border-ink-100 bg-white"><div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-4 px-4 py-4 sm:px-8 lg:px-12"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-700"><span className="font-extrabold text-gold-400">C</span></div><div><p className="font-extrabold">Chama Admin</p><p className="text-xs text-ink-400">Full system operations</p></div></div><div className="flex items-center gap-4"><span className="hidden items-center gap-2 text-sm text-ink-500 sm:flex"><span className="h-2.5 w-2.5 rounded-full bg-brand-500" />All systems operational</span><button onClick={onLogout} className="btn-secondary flex items-center gap-2 px-3 py-2.5 text-sm"><LogOut size={16} /><span className="hidden sm:inline">Log out</span></button></div></div></header>
-      <main className="mx-auto max-w-screen-2xl px-4 py-6 sm:px-8 sm:py-8 lg:px-12">
+      <div className="mx-auto flex max-w-screen-2xl items-start lg:px-8 lg:py-8 xl:px-12">
+        <aside className="sticky top-6 hidden w-60 shrink-0 rounded-2xl border border-ink-100 bg-white p-4 shadow-sm lg:block">
+          <p className="px-3 pb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-300">Admin controls</p>
+          <nav className="space-y-1">
+            {tabs.map(({ label, icon: Icon }) => <button key={label} onClick={() => setTab(label)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors ${tab === label ? 'bg-brand-50 text-brand-700' : 'text-ink-500 hover:bg-ink-50 hover:text-ink-900'}`}><Icon size={18} /><span>{label}</span>{label === 'Members' && <span className="ml-auto rounded-full bg-gold-400 px-2 py-0.5 text-[10px] font-bold text-ink-900">{pending}</span>}{label === 'Payments' && unpaid > 0 && <span className="ml-auto rounded-full bg-gold-100 px-2 py-0.5 text-[10px] font-bold text-gold-700">{unpaid}</span>}</button>)}
+          </nav>
+          <div className="mt-6 border-t border-ink-100 pt-5"><p className="px-3 text-xs font-semibold text-ink-400">System status</p><div className="mt-3 flex items-center gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-xs font-semibold text-brand-700"><span className="h-2 w-2 rounded-full bg-brand-500" />Live monitoring on</div></div>
+        </aside>
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8 lg:px-8 lg:py-0">
         <div className="mb-7"><p className="mb-2 text-sm font-semibold text-brand-600">Operations console · Friday, September 4, 2026</p><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Good morning, Admin</h1><p className="mt-2 text-sm text-ink-500">Manage members, groups, payments, and every activity across the platform.</p></div>
-        <div className="mb-7 overflow-x-auto border-b border-ink-200"><div className="flex min-w-max gap-1">{tabs.map(({ label, icon: Icon }) => <button key={label} onClick={() => setTab(label)} className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold ${tab === label ? 'border-brand-600 text-brand-700' : 'border-transparent text-ink-400 hover:text-ink-700'}`}><Icon size={17} />{label}</button>)}</div></div>
+        <div className="mb-7 overflow-x-auto border-b border-ink-200 lg:hidden"><div className="flex min-w-max gap-1">{tabs.map(({ label, icon: Icon }) => <button key={label} onClick={() => setTab(label)} className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold ${tab === label ? 'border-brand-600 text-brand-700' : 'border-transparent text-ink-400 hover:text-ink-700'}`}><Icon size={17} />{label}</button>)}</div></div>
         {notice && <div className="mb-5 flex items-center justify-between rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-700"><span className="flex items-center gap-2"><CheckCircle2 size={17} />{notice}</span><button onClick={() => setNotice('')}>×</button></div>}
         {tab === 'Overview' && <Overview members={members} pending={pending} unpaid={unpaid} activity={activity} go={setTab} />}
         {tab === 'Members' && <Members members={members} onAccept={(member) => changeMember(member, { status: 'Verified' }, `${member.name} was accepted into Chama`)} onBlock={(member) => changeMember(member, { status: 'Blocked' }, `${member.name} was blocked from the system`)} onAssign={(member, group) => changeMember(member, { group }, `${member.name} assigned to ${group}`)} />}
@@ -59,6 +67,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         {tab === 'Payments' && <Payments members={members} unpaidOnly={unpaidOnly} setUnpaidOnly={setUnpaidOnly} onPay={(member) => changeMember(member, { paid: true }, `Advance contribution paid for ${member.name}`)} />}
         {tab === 'Activity log' && <ActivityLog activity={activity} />}
         <footer className="py-8 text-center text-xs text-ink-400">Chama Admin Console · Demo data with live local controls</footer>
+        </main>
       </main>
     </div>
   );
