@@ -19,10 +19,10 @@ export function AppShell({ active, onNavigate, unreadCount, children }: AppShell
 
   return (
     <div className="min-h-[100dvh] w-full bg-ink-50 flex flex-col relative">
-      <main className="flex-1 min-w-0 w-full max-w-3xl mx-auto pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-24">
+      <main className="flex-1 min-w-0 w-full max-w-screen-2xl mx-auto pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-24">
         {children}
       </main>
-      <nav className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur border-t border-ink-100 px-2 pb-[env(safe-area-inset-bottom)] z-50 lg:left-1/2 lg:-translate-x-1/2 lg:bottom-5 lg:max-w-3xl lg:rounded-2xl lg:border lg:shadow-lg">
+      <nav className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur border-t border-ink-100 px-2 pb-[env(safe-area-inset-bottom)] z-50 lg:bottom-5 lg:rounded-2xl lg:border lg:shadow-lg">
         <div className="flex items-center justify-around">
           {items.map((item) => {
             const Icon = item.icon;
