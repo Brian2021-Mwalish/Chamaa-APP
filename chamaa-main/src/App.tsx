@@ -21,11 +21,6 @@ function App() {
   const [user, setUser] = useState<User>(createInitialUser);
 
   const handleLogin = (p: string) => {
-    const normalizedPhone = p.replace(/\D/g, '');
-    if (normalizedPhone === '0712345678') {
-      setStage('admin');
-      return;
-    }
     setPhone(p);
     setStage('otp');
   };
@@ -37,6 +32,10 @@ function App() {
   };
 
   const handleOtpVerified = () => {
+    if (phone.replace(/\D/g, '') === '0712345678') {
+      setStage('admin');
+      return;
+    }
     setStage('kyc');
   };
 
