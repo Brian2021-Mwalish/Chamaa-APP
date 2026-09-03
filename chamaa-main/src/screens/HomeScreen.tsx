@@ -1,4 +1,4 @@
-import { TrendingUp, Calendar, Users, ArrowRight, CheckCircle2, Clock, Wallet, Sparkles } from 'lucide-react';
+import { TrendingUp, Users, ArrowRight, CheckCircle2, Clock, Wallet, Sparkles } from 'lucide-react';
 import { type User, formatKES } from '@/types';
 import type { Screen } from '@/types';
 
