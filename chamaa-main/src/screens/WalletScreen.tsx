@@ -8,7 +8,7 @@ interface WalletScreenProps {
 export function WalletScreen({ user }: WalletScreenProps) {
   return (
     <div className="animate-fade-in">
-      <div className="bg-brand-700 px-6 pt-12 pb-10 rounded-b-3xl">
+      <div className="bg-brand-700 px-6 pt-8 pb-10 rounded-b-3xl lg:px-10 lg:pt-10 lg:rounded-b-none">
         <div className="flex items-center gap-2 text-brand-100 text-sm mb-2">
           <Wallet size={16} />
           <span>My Wallet</span>
@@ -28,7 +28,7 @@ export function WalletScreen({ user }: WalletScreenProps) {
         </div>
       </div>
 
-      <div className="px-6 -mt-4">
+      <div className="px-6 -mt-4 lg:px-10 lg:-mt-6">
         {user.creditBalance > 0 && (
           <div className="card p-4 mb-4 bg-gold-50 border-gold-200">
             <div className="flex items-center gap-3">

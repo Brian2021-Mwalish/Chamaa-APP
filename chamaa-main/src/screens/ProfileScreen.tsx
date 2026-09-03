@@ -9,7 +9,7 @@ interface ProfileScreenProps {
 export function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
   return (
     <div className="animate-fade-in">
-      <div className="bg-brand-700 px-6 pt-12 pb-10 rounded-b-3xl">
+      <div className="bg-brand-700 px-6 pt-8 pb-10 rounded-b-3xl lg:px-10 lg:pt-10 lg:rounded-b-none">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-gold-400 rounded-full flex items-center justify-center">
             <span className="text-ink-900 font-bold text-xl">
@@ -31,7 +31,7 @@ export function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
         </div>
       </div>
 
-      <div className="px-6 -mt-4">
+      <div className="px-6 -mt-4 lg:px-10 lg:-mt-6">
         <div className="card p-5 mb-4">
           <h3 className="font-bold text-ink-900 mb-4">My Plan</h3>
           <div className="flex items-center gap-3 mb-4">

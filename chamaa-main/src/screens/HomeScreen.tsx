@@ -17,7 +17,7 @@ export function HomeScreen({ user, onNavigate }: HomeScreenProps) {
 
   return (
     <div className="animate-fade-in">
-      <div className="bg-brand-700 px-6 pt-12 pb-8 rounded-b-3xl">
+      <div className="bg-brand-700 px-6 pt-8 pb-8 rounded-b-3xl lg:px-10 lg:pt-10 lg:rounded-b-none">
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-brand-100 text-sm">Karibu,</p>
@@ -50,7 +50,7 @@ export function HomeScreen({ user, onNavigate }: HomeScreenProps) {
         </div>
       </div>
 
-      <div className="px-6 -mt-4">
+      <div className="px-6 -mt-4 lg:px-10 lg:-mt-6">
         <div className="card p-5 mb-4">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -126,7 +126,7 @@ export function HomeScreen({ user, onNavigate }: HomeScreenProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2">
           <button onClick={() => onNavigate('group')} className="card p-4 text-left hover:border-brand-300 transition-all">
             <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center mb-3">
               <Users className="text-brand-600" size={20} />

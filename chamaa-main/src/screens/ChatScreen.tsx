@@ -24,7 +24,7 @@ export function ChatScreen({ user, onSend }: ChatScreenProps) {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-5rem)] min-h-0 lg:h-[calc(100dvh-6rem)]">
-      <div className="bg-brand-700 px-4 sm:px-6 pt-6 sm:pt-10 pb-4 sticky top-0 z-10">
+      <div className="bg-brand-700 px-4 sm:px-6 pt-6 sm:pt-8 pb-4 sticky top-16 z-10 lg:px-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center">
             <Users size={20} className="text-white" />

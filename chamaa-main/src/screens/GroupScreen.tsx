@@ -13,7 +13,7 @@ export function GroupScreen({ user, onNavigate }: GroupScreenProps) {
 
   return (
     <div className="animate-fade-in">
-      <div className="bg-brand-700 px-6 pt-12 pb-8 rounded-b-3xl">
+      <div className="bg-brand-700 px-6 pt-8 pb-8 rounded-b-3xl lg:px-10 lg:pt-10 lg:rounded-b-none">
         <div className="flex items-center gap-2 text-brand-100 text-sm mb-2">
           <Users size={16} />
           <span>Your Savings Group</span>
@@ -33,7 +33,7 @@ export function GroupScreen({ user, onNavigate }: GroupScreenProps) {
         </div>
       </div>
 
-      <div className="px-6 -mt-4">
+      <div className="px-6 -mt-4 lg:px-10 lg:-mt-6">
         <div className="card p-5 mb-4">
           <h3 className="font-bold text-ink-900 mb-4">Payout Schedule</h3>
           <p className="text-sm text-ink-400 mb-4">
