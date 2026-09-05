@@ -10,6 +10,7 @@ import { HomeScreen } from '@/screens/HomeScreen';
 import { GroupScreen } from '@/screens/GroupScreen';
 import { ChatScreen } from '@/screens/ChatScreen';
 import { WalletScreen } from '@/screens/WalletScreen';
+import { ServicesScreen } from '@/screens/ServicesScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { AdminDashboard } from '@/screens/AdminDashboard';
 import { createInitialUser, createDemoUser, type AppStage, type Screen, type Plan, type User, type ChatMessage } from '@/types';
@@ -110,6 +111,7 @@ function App() {
       {screen === 'group' && <GroupScreen user={user} onNavigate={setScreen} />}
       {screen === 'chat' && <ChatScreen user={user} onSend={handleSendMessage} />}
       {screen === 'wallet' && <WalletScreen user={user} />}
+      {screen === 'services' && <ServicesScreen user={user} />}
       {screen === 'profile' && <ProfileScreen user={user} onLogout={handleLogout} />}
     </AppShell>
   );

@@ -1,4 +1,4 @@
-import { Home, Users, MessageCircle, Wallet, User, Bell, Settings } from 'lucide-react';
+import { Home, Users, MessageCircle, Wallet, User, Bell, Settings, BriefcaseBusiness } from 'lucide-react';
 import type { Screen } from '@/types';
 
 interface AppShellProps {
@@ -14,6 +14,7 @@ export function AppShell({ active, onNavigate, unreadCount, children }: AppShell
     { id: 'group', label: 'Group', icon: Users },
     { id: 'chat', label: 'Chat', icon: MessageCircle },
     { id: 'wallet', label: 'Wallet', icon: Wallet },
+    { id: 'services', label: 'Services', icon: BriefcaseBusiness },
     { id: 'profile', label: 'Profile', icon: User },
   ];
 

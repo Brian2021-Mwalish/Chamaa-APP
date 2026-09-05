@@ -12,7 +12,7 @@ export type AppStage =
   | 'waiting'
   | 'app';
 
-export type Screen = 'home' | 'group' | 'chat' | 'wallet' | 'profile';
+export type Screen = 'home' | 'group' | 'chat' | 'wallet' | 'services' | 'profile';
 
 export interface Plan {
   id: PlanTier;
