@@ -60,14 +60,14 @@ export function ServicesScreen({ user }: ServicesScreenProps) {
         })}
       </div>
 
-      {activeTab === 'saving' && <SavingsPage user={user} onSwitchToOverdraft={() => setActiveTab('overdraft')} />}
+      {activeTab === 'saving' && <SavingsPage onSwitchToOverdraft={() => setActiveTab('overdraft')} />}
       {activeTab === 'overdraft' && <OverdraftPage user={user} />}
       {activeTab === 'partnership' && <PartnershipPage />}
     </div>
   );
 }
 
-function SavingsPage({ user, onSwitchToOverdraft }: { user: User; onSwitchToOverdraft: () => void }) {
+function SavingsPage({ onSwitchToOverdraft }: { onSwitchToOverdraft: () => void }) {
   const [goal, setGoal] = useState(50000);
   const [saved, setSaved] = useState(18500);
   const progress = Math.min((saved / goal) * 100, 100);

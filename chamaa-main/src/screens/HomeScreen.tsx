@@ -1,4 +1,4 @@
-import { TrendingUp, Users, ArrowRight, CheckCircle2, Clock, Wallet, Sparkles } from 'lucide-react';
+import { TrendingUp, Users, ArrowRight, CheckCircle2, Clock, Wallet, Sparkles, Landmark, WalletCards, Handshake } from 'lucide-react';
 import { type User, formatKES } from '@/types';
 import type { Screen } from '@/types';
 
@@ -125,6 +125,35 @@ export function HomeScreen({ user, onNavigate }: HomeScreenProps) {
             ))}
           </div>
         </div>
+
+        <section className="mb-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">Member services</p>
+              <h2 className="mt-1 text-lg font-extrabold text-ink-900">More ways to reach your goals</h2>
+            </div>
+            <button onClick={() => onNavigate('services')} className="flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
+              View all <ArrowRight size={15} />
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <button onClick={() => onNavigate('services')} className="card border-l-4 border-l-brand-500 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-brand-300">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700"><Landmark size={20} /></div>
+              <p className="font-bold text-ink-900">Savings</p>
+              <p className="mt-1 text-xs leading-5 text-ink-400">Build a personal safety net with flexible deposits.</p>
+            </button>
+            <button onClick={() => onNavigate('services')} className="card border-l-4 border-l-gold-400 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-gold-500">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gold-100 text-gold-700"><WalletCards size={20} /></div>
+              <p className="font-bold text-ink-900">Overdraft</p>
+              <p className="mt-1 text-xs leading-5 text-ink-400">Get short-term support for urgent expenses.</p>
+            </button>
+            <button onClick={() => onNavigate('services')} className="card border-l-4 border-l-ink-700 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-ink-400">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-ink-100 text-ink-700"><Handshake size={20} /></div>
+              <p className="font-bold text-ink-900">Partnership</p>
+              <p className="mt-1 text-xs leading-5 text-ink-400">Connect your business with Chama members.</p>
+            </button>
+          </div>
+        </section>
 
         <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2">
           <button onClick={() => onNavigate('group')} className="card p-4 text-left hover:border-brand-300 transition-all">
