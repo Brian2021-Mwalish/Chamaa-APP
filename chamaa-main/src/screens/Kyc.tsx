@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { Upload, IdCard, FileText, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface KycProps {
@@ -8,8 +8,50 @@ interface KycProps {
 export function Kyc({ onComplete }: KycProps) {
   const [step, setStep] = useState<'intro' | 'id' | 'income' | 'review'>('intro');
   const [fullName, setFullName] = useState('');
-  const [idUploaded, setIdUploaded] = useState(false);
-  const [incomeUploaded, setIncomeUploaded] = useState(false);
+  const [idFile, setIdFile] = useState<File | null>(null);
+  const [incomeFile, setIncomeFile] = useState<File | null>(null);
+  const [idError, setIdError] = useState('');
+  const [incomeError, setIncomeError] = useState('');
+  const idInputRef = useRef<HTMLInputElement>(null);
+  const incomeInputRef = useRef<HTMLInputElement>(null);
+
+  const handleIdFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      setIdFile(null);
+      setIdError('Choose a JPG or PNG image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setIdFile(null);
+      setIdError('The ID image must be 5MB or smaller.');
+      return;
+    }
+
+    setIdFile(file);
+    setIdError('');
+  };
+
+  const handleIncomeFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
+      setIncomeFile(null);
+      setIncomeError('Choose a PDF, JPG, or PNG document.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setIncomeFile(null);
+      setIncomeError('The document must be 10MB or smaller.');
+      return;
+    }
+
+    setIncomeFile(file);
+    setIncomeError('');
+  };
 
   return (
     <div className="min-h-screen bg-ink-50 flex flex-col">
@@ -79,15 +121,25 @@ export function Kyc({ onComplete }: KycProps) {
           {step === 'id' && (
             <div className="animate-fade-in">
               <p className="text-ink-600 mb-6">Take a clear photo of the front of your National ID or Passport.</p>
+              <input
+                ref={idInputRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                className="hidden"
+                onChange={handleIdFileChange}
+                onClick={(event) => { event.currentTarget.value = ''; }}
+              />
               <button
-                onClick={() => setIdUploaded(true)}
-                className={`w-full border-2 border-dashed rounded-2xl p-10 flex flex-col items-center gap-3 transition-all ${idUploaded ? 'border-brand-400 bg-brand-50' : 'border-ink-200 bg-white hover:border-brand-400'}`}
+                type="button"
+                onClick={() => idInputRef.current?.click()}
+                className={`w-full border-2 border-dashed rounded-2xl p-10 flex flex-col items-center gap-3 transition-all ${idFile ? 'border-brand-400 bg-brand-50' : 'border-ink-200 bg-white hover:border-brand-400'}`}
               >
-                {idUploaded ? (
+                {idFile ? (
                   <>
                     <CheckCircle2 className="text-brand-600" size={40} />
                     <p className="font-semibold text-brand-700">ID uploaded</p>
-                    <p className="text-sm text-ink-400">Tap to retake</p>
+                    <p className="text-sm text-ink-500 break-all">{idFile.name}</p>
+                    <p className="text-sm text-ink-400">Tap to replace</p>
                   </>
                 ) : (
                   <>
@@ -99,9 +151,10 @@ export function Kyc({ onComplete }: KycProps) {
                   </>
                 )}
               </button>
+              {idError && <p className="text-sm text-red-600 mt-2" role="alert">{idError}</p>}
               <button
                 onClick={() => setStep('income')}
-                disabled={!idUploaded}
+                disabled={!idFile}
                 className="btn-primary w-full mt-6 flex items-center justify-center gap-2"
               >
                 Continue
@@ -113,14 +166,24 @@ export function Kyc({ onComplete }: KycProps) {
           {step === 'income' && (
             <div className="animate-fade-in">
               <p className="text-ink-600 mb-6">Upload a payslip, business record, or M-Pesa statement showing your income.</p>
+              <input
+                ref={incomeInputRef}
+                type="file"
+                accept="application/pdf,image/jpeg,image/png"
+                className="hidden"
+                onChange={handleIncomeFileChange}
+                onClick={(event) => { event.currentTarget.value = ''; }}
+              />
               <button
-                onClick={() => setIncomeUploaded(true)}
-                className={`w-full border-2 border-dashed rounded-2xl p-10 flex flex-col items-center gap-3 transition-all ${incomeUploaded ? 'border-brand-400 bg-brand-50' : 'border-ink-200 bg-white hover:border-brand-400'}`}
+                type="button"
+                onClick={() => incomeInputRef.current?.click()}
+                className={`w-full border-2 border-dashed rounded-2xl p-10 flex flex-col items-center gap-3 transition-all ${incomeFile ? 'border-brand-400 bg-brand-50' : 'border-ink-200 bg-white hover:border-brand-400'}`}
               >
-                {incomeUploaded ? (
+                {incomeFile ? (
                   <>
                     <CheckCircle2 className="text-brand-600" size={40} />
                     <p className="font-semibold text-brand-700">Document uploaded</p>
+                    <p className="text-sm text-ink-500 break-all">{incomeFile.name}</p>
                     <p className="text-sm text-ink-400">Tap to replace</p>
                   </>
                 ) : (
@@ -133,9 +196,10 @@ export function Kyc({ onComplete }: KycProps) {
                   </>
                 )}
               </button>
+              {incomeError && <p className="text-sm text-red-600 mt-2" role="alert">{incomeError}</p>}
               <button
                 onClick={() => setStep('review')}
-                disabled={!incomeUploaded}
+                disabled={!incomeFile}
                 className="btn-primary w-full mt-6 flex items-center justify-center gap-2"
               >
                 Continue
@@ -161,13 +225,13 @@ export function Kyc({ onComplete }: KycProps) {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm text-ink-500">National ID</span>
                   <span className="font-semibold text-brand-600 flex items-center gap-1">
-                    <CheckCircle2 size={16} /> Uploaded
+                    <CheckCircle2 size={16} /> {idFile?.name}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-ink-500">Proof of income</span>
                   <span className="font-semibold text-brand-600 flex items-center gap-1">
-                    <CheckCircle2 size={16} /> Uploaded
+                    <CheckCircle2 size={16} /> {incomeFile?.name}
                   </span>
                 </div>
               </div>

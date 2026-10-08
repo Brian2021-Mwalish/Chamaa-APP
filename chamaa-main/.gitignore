@@ -10,6 +10,10 @@ node_modules
 dist
 dist-ssr
 *.local
+.venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
 
 .vscode/*
 !.vscode/extensions.json
