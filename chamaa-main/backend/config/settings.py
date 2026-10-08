@@ -87,6 +87,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_uploads'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AFRICASTALKING_USERNAME = os.environ.get('AFRICASTALKING_USERNAME', '')

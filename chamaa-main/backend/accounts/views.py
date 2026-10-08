@@ -4,14 +4,18 @@ import secrets
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db import transaction
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import SignupSerializer, UserProfileSerializer
+from .models import KYCSubmission
+from .serializers import KYCSubmissionSerializer, SignupSerializer, UserProfileSerializer
 from .sms import send_otp_sms
 
 
@@ -161,6 +165,38 @@ class CurrentUserView(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class KYCSubmissionView(APIView):
+    permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request):
+        existing_submission = KYCSubmission.objects.filter(user=request.user).first()
+        serializer = KYCSubmissionSerializer(
+            existing_submission,
+            data=request.data,
+            partial=existing_submission is not None,
+        )
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            submission = serializer.save(
+                user=request.user,
+                status='pending',
+                submitted_at=timezone.now(),
+            )
+            request.user.name = submission.full_name
+            request.user.onboarding_stage = 'plan'
+            request.user.save(update_fields=['name', 'onboarding_stage'])
+
+        return Response(
+            {
+                'submission': KYCSubmissionSerializer(submission).data,
+                'user': UserProfileSerializer(request.user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class AdvanceOnboardingView(APIView):

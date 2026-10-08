@@ -51,6 +51,36 @@ class CurrentUserApiTests(APITestCase):
         self.assertEqual(response.data['phone'], self.user.phone)
 
 
+class SignupApiTests(APITestCase):
+    def test_signup_saves_email_without_requesting_otp(self):
+        response = self.client.post(
+            '/api/v1/accounts/signup/',
+            {
+                'name': 'Amina Example',
+                'email': 'amina@example.com',
+                'phone': '0712 345 678',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['user']['email'], 'amina@example.com')
+        self.assertEqual(response.data['user']['phone'], '+254712345678')
+        self.assertEqual(response.data['user']['onboarding_stage'], 'kyc')
+        self.assertFalse(response.data['user']['phone_verified'])
+        user = User.objects.get(phone='+254712345678')
+        self.assertEqual(user.email, 'amina@example.com')
+
+    def test_signup_requires_email(self):
+        response = self.client.post(
+            '/api/v1/accounts/signup/',
+            {'name': 'Amina Example', 'phone': '0712 345 678'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+
 @override_settings(DEBUG=True)
 class OtpAuthenticationApiTests(APITestCase):
     def setUp(self):

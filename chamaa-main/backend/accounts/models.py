@@ -1,7 +1,21 @@
+from pathlib import Path
+from uuid import uuid4
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
+
+from .storage import PrivateFileSystemStorage
+
+
+private_kyc_storage = PrivateFileSystemStorage()
+
+
+def kyc_document_path(instance, filename):
+    extension = Path(filename).suffix.lower()
+    return f'kyc/{instance.user_id}/{uuid4().hex}{extension}'
 
 
 class UserManager(BaseUserManager):
@@ -31,6 +45,11 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    PLAN_CHOICES = (
+        ('starter', 'Starter'),
+        ('standard', 'Standard'),
+        ('premium', 'Premium'),
+    )
     ONBOARDING_STAGES = (
         ('kyc', 'KYC'),
         ('plan', 'Plan selection'),
@@ -42,6 +61,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(blank=True)
+    selected_plan = models.CharField(max_length=20, choices=PLAN_CHOICES, blank=True)
     phone_verified = models.BooleanField(default=False)
     onboarding_stage = models.CharField(
         max_length=16, choices=ONBOARDING_STAGES, default='kyc'
@@ -57,3 +77,34 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.phone
+
+
+class KYCSubmission(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='kyc_submission',
+    )
+    full_name = models.CharField(max_length=150)
+    id_document = models.FileField(
+        storage=private_kyc_storage,
+        upload_to=kyc_document_path,
+    )
+    income_document = models.FileField(
+        storage=private_kyc_storage,
+        upload_to=kyc_document_path,
+    )
+    status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default='pending'
+    )
+    submitted_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'KYC for {self.user.phone} ({self.status})'

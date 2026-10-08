@@ -13,8 +13,8 @@ import { WalletScreen } from '@/screens/WalletScreen';
 import { ServicesScreen } from '@/screens/ServicesScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { AdminDashboard } from '@/screens/AdminDashboard';
-import { advanceOnboarding, clearAuthToken, getCurrentUser, logoutAccount, requestOtp, signupAccount, updateCurrentUser, verifyOtp } from '@/api';
-import { createInitialUser, createDemoUser, type AppStage, type Screen, type Plan, type User, type ChatMessage } from '@/types';
+import { advanceOnboarding, clearAuthToken, getCurrentUser, logoutAccount, requestOtp, signupAccount, submitKyc, updateCurrentUser, verifyOtp } from '@/api';
+import { createInitialUser, createDemoUser, PLANS, type AppStage, type Screen, type Plan, type User, type ChatMessage } from '@/types';
 
 function App() {
   const [stage, setStage] = useState<AppStage>('login');
@@ -31,7 +31,12 @@ function App() {
       .then((profile) => {
         if (!profile || cancelled) return;
         setPhone(profile.phone);
-        setUser((currentUser) => ({ ...currentUser, name: profile.name, phone: profile.phone }));
+        setUser((currentUser) => ({
+          ...currentUser,
+          name: profile.name,
+          phone: profile.phone,
+          plan: PLANS.find((plan) => plan.id === profile.selected_plan) ?? currentUser.plan,
+        }));
         setStage(profile.is_staff ? 'admin' : profile.onboarding_stage);
       })
       .catch(clearAuthToken)
@@ -82,15 +87,15 @@ function App() {
     setOtpCode(result.debug_code ?? '');
   };
 
-  const handleKycComplete = async (name: string) => {
-    const profile = await updateCurrentUser({ name });
-    const nextProfile = await advanceOnboarding();
+  const handleKycComplete = async (data: { fullName: string; idDocument: File; incomeDocument: File }) => {
+    const profile = await submitKyc(data);
     setUser((u) => ({ ...u, name: profile.name, phone: profile.phone, verification: 'pending' }));
-    setStage(nextProfile.onboarding_stage);
+    setStage(profile.onboarding_stage);
   };
 
   const handlePlanSelect = async (plan: Plan) => {
     try {
+      await updateCurrentUser({ selected_plan: plan.id });
       const profile = await advanceOnboarding();
       setUser((u) => ({ ...u, plan }));
       setOnboardingError('');

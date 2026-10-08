@@ -2,6 +2,7 @@ export interface AccountProfile {
   phone: string;
   name: string;
   email: string;
+  selected_plan: 'starter' | 'standard' | 'premium' | '';
   is_staff: boolean;
   phone_verified: boolean;
   onboarding_stage: 'kyc' | 'plan' | 'membership' | 'waiting' | 'app';
@@ -12,7 +13,7 @@ const TOKEN_STORAGE_KEY = 'chamaa.accountToken';
 
 async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
-  if (options.body && !headers.has('Content-Type')) {
+  if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -64,12 +65,30 @@ export function advanceOnboarding(): Promise<AccountProfile> {
   return apiRequest<AccountProfile>('/accounts/onboarding/advance/', { method: 'POST' });
 }
 
+export async function submitKyc(data: {
+  fullName: string;
+  idDocument: File;
+  incomeDocument: File;
+}): Promise<AccountProfile> {
+  const formData = new FormData();
+  formData.append('full_name', data.fullName);
+  formData.append('id_document', data.idDocument);
+  formData.append('income_document', data.incomeDocument);
+  const result = await apiRequest<{ user: AccountProfile }>('/accounts/kyc/submit/', {
+    method: 'POST',
+    body: formData,
+  });
+  return result.user;
+}
+
 export function getCurrentUser(): Promise<AccountProfile | null> {
   if (!sessionStorage.getItem(TOKEN_STORAGE_KEY)) return Promise.resolve(null);
   return apiRequest<AccountProfile>('/accounts/me/');
 }
 
-export function updateCurrentUser(data: Pick<AccountProfile, 'name'>): Promise<AccountProfile> {
+export function updateCurrentUser(
+  data: Partial<Pick<AccountProfile, 'name' | 'selected_plan'>>,
+): Promise<AccountProfile> {
   return apiRequest<AccountProfile>('/accounts/me/', {
     method: 'PATCH',
     body: JSON.stringify(data),

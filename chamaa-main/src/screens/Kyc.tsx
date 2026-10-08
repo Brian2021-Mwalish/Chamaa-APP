@@ -1,9 +1,10 @@
 import { useRef, useState, type ChangeEvent } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Upload, IdCard, FileText, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface KycProps {
   initialName?: string;
-  onComplete: (name: string) => Promise<void>;
+  onComplete: (data: { fullName: string; idDocument: File; incomeDocument: File }) => Promise<void>;
 }
 
 export function Kyc({ initialName = '', onComplete }: KycProps) {
@@ -14,19 +15,24 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
   const [idError, setIdError] = useState('');
   const [incomeError, setIncomeError] = useState('');
   const [submitError, setSubmitError] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  const submitMutation = useMutation({ mutationFn: onComplete });
   const idInputRef = useRef<HTMLInputElement>(null);
   const incomeInputRef = useRef<HTMLInputElement>(null);
 
   const saveProfile = async () => {
-    setIsSaving(true);
     setSubmitError('');
+    if (!idFile || !incomeFile) {
+      setSubmitError('Select both required documents before submitting.');
+      return;
+    }
     try {
-      await onComplete(fullName);
+      await submitMutation.mutateAsync({
+        fullName,
+        idDocument: idFile,
+        incomeDocument: incomeFile,
+      });
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Could not save your profile.');
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -152,7 +158,7 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
                 {idFile ? (
                   <>
                     <CheckCircle2 className="text-brand-600" size={40} />
-                    <p className="font-semibold text-brand-700">ID uploaded</p>
+                    <p className="font-semibold text-brand-700">ID selected</p>
                     <p className="text-sm text-ink-500 break-all">{idFile.name}</p>
                     <p className="text-sm text-ink-400">Tap to replace</p>
                   </>
@@ -197,7 +203,7 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
                 {incomeFile ? (
                   <>
                     <CheckCircle2 className="text-brand-600" size={40} />
-                    <p className="font-semibold text-brand-700">Document uploaded</p>
+                    <p className="font-semibold text-brand-700">Document selected</p>
                     <p className="text-sm text-ink-500 break-all">{incomeFile.name}</p>
                     <p className="text-sm text-ink-400">Tap to replace</p>
                   </>
@@ -230,7 +236,7 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
               </div>
               <h2 className="text-xl font-bold text-ink-900 mb-3">Verification details ready</h2>
               <p className="text-ink-500 mb-8 max-w-xs mx-auto">
-                Your profile will be saved to your account. The selected ID and income files are not uploaded to the backend yet.
+                Your name and both documents will be saved to your private KYC record for review.
               </p>
               <div className="card p-5 text-left mb-6">
                 <div className="flex items-center justify-between mb-3">
@@ -252,10 +258,10 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
               </div>
               <button
                 onClick={() => void saveProfile()}
-                disabled={isSaving}
+                disabled={submitMutation.isPending}
                 className="btn-primary w-full flex items-center justify-center gap-2"
               >
-                {isSaving ? 'Saving profile...' : 'Continue to plans'}
+                {submitMutation.isPending ? 'Saving profile...' : 'Continue to plans'}
                 <ArrowRight size={20} />
               </button>
               {submitError && <p className="mt-3 text-sm text-red-600" role="alert">{submitError}</p>}
