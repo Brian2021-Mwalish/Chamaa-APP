@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ArrowRight, Crown, ShieldCheck } from 'lucide-react';
+import { Check, ArrowRight, Crown, ShieldCheck, Smartphone, CircleDollarSign } from 'lucide-react';
 import { MEMBERSHIP_FEE, formatKES, type Plan } from '@/types';
 
 interface MembershipProps {
@@ -9,6 +9,18 @@ interface MembershipProps {
 
 export function Membership({ plan, onComplete }: MembershipProps) {
   const [paid, setPaid] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'usdt'>('mpesa');
+  const [mpesaPhone, setMpesaPhone] = useState('');
+  const [paymentError, setPaymentError] = useState('');
+
+  const handleDemoPayment = () => {
+    if (paymentMethod === 'mpesa' && mpesaPhone.replace(/\D/g, '').length < 9) {
+      setPaymentError('Enter a valid M-Pesa phone number.');
+      return;
+    }
+    setPaymentError('');
+    setPaid(true);
+  };
 
   if (paid) {
     return (
@@ -17,9 +29,9 @@ export function Membership({ plan, onComplete }: MembershipProps) {
           <div className="w-24 h-24 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="text-brand-600" size={52} />
           </div>
-          <h1 className="text-2xl font-extrabold text-ink-900 mb-3">Membership active!</h1>
+          <h1 className="text-2xl font-extrabold text-ink-900 mb-3">Demo payment recorded</h1>
           <p className="text-ink-500 mb-8 max-w-xs mx-auto">
-            You're now an official Chama member. Let's find your savings group.
+            No real payment was sent or verified. Continue to preview the next onboarding step.
           </p>
           <button onClick={onComplete} className="btn-primary w-full flex items-center justify-center gap-2">
             Find my group
@@ -93,20 +105,78 @@ export function Membership({ plan, onComplete }: MembershipProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-ink-400 mb-6 justify-center">
-            <ShieldCheck size={16} />
-            <span>Secured payment via M-Pesa</span>
+          <div className="mb-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Payment method">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={paymentMethod === 'mpesa'}
+              onClick={() => { setPaymentMethod('mpesa'); setPaymentError(''); }}
+              className={`flex min-h-20 items-center gap-3 rounded-lg border p-4 text-left transition-colors ${paymentMethod === 'mpesa' ? 'border-brand-600 bg-brand-50 ring-1 ring-brand-600' : 'border-ink-200 bg-white hover:border-brand-300'}`}
+            >
+              <Smartphone className="shrink-0 text-brand-700" size={22} />
+              <span>
+                <span className="block font-semibold text-ink-900">M-Pesa</span>
+                <span className="text-xs text-ink-500">Pay in KES</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={paymentMethod === 'usdt'}
+              onClick={() => { setPaymentMethod('usdt'); setPaymentError(''); }}
+              className={`flex min-h-20 items-center gap-3 rounded-lg border p-4 text-left transition-colors ${paymentMethod === 'usdt' ? 'border-brand-600 bg-brand-50 ring-1 ring-brand-600' : 'border-ink-200 bg-white hover:border-brand-300'}`}
+            >
+              <CircleDollarSign className="shrink-0 text-brand-700" size={22} />
+              <span>
+                <span className="block font-semibold text-ink-900">USDT</span>
+                <span className="text-xs text-ink-500">Pay in USD</span>
+              </span>
+            </button>
           </div>
+
+          {paymentMethod === 'mpesa' ? (
+            <div className="mb-5">
+              <label htmlFor="mpesa-phone" className="mb-2 block text-sm font-semibold text-ink-700">
+                M-Pesa phone number
+              </label>
+              <input
+                id="mpesa-phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={mpesaPhone}
+                onChange={(event) => { setMpesaPhone(event.target.value); setPaymentError(''); }}
+                placeholder="0712 345 678"
+                className="input-field"
+              />
+              <p className="mt-1 text-xs text-ink-400">Enter the number registered with M-Pesa for the payment request.</p>
+            </div>
+          ) : (
+            <div className="mb-5 rounded-lg border border-ink-200 bg-white p-4">
+              <p className="font-semibold text-ink-900">USDT payment</p>
+              <p className="mt-1 text-sm text-ink-500">
+                The USD amount and receiving wallet will be shown when a USDT checkout is connected. For now, this is a demo only.
+              </p>
+            </div>
+          )}
+
+          {paymentError && <p className="mb-4 text-sm text-red-600" role="alert">{paymentError}</p>}
+
+          <div className="flex items-center gap-2 text-sm text-ink-400 mb-2 justify-center">
+            <ShieldCheck size={16} />
+            <span>Payment processing is not connected yet</span>
+          </div>
+          <p className="mb-2 text-center text-xs text-ink-400">Demo only: this screen does not send or verify payments.</p>
         </div>
       </div>
 
       <div className="sticky bottom-0 bg-white border-t border-ink-100 px-6 py-4">
         <div className="max-w-md mx-auto">
           <button
-            onClick={() => setPaid(true)}
+            onClick={handleDemoPayment}
             className="btn-primary w-full flex items-center justify-center gap-2"
           >
-            Pay {formatKES(MEMBERSHIP_FEE)} via M-Pesa
+            Preview {paymentMethod === 'mpesa' ? 'M-Pesa' : 'USDT'} payment
             <ArrowRight size={20} />
           </button>
         </div>

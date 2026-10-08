@@ -1,18 +1,36 @@
 import { useState } from 'react';
-import { Phone, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { Phone, UserRound, Mail, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
 
 interface LoginProps {
-  onLogin: (phone: string) => void;
+  onLogin: (phone: string) => Promise<void>;
+  onSignUp: (name: string, email: string, phone: string) => Promise<void>;
   onDemoLogin: () => void;
 }
 
-export function Login({ onLogin, onDemoLogin }: LoginProps) {
+export function Login({ onLogin, onSignUp, onDemoLogin }: LoginProps) {
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.trim().length >= 3) {
-      onLogin(phone);
+    if (phone.trim().length < 3) return;
+    if (mode === 'signup' && (name.trim().length < 3 || !email.trim())) return;
+    setIsSubmitting(true);
+    setError('');
+    try {
+      if (mode === 'signup') {
+        await onSignUp(name.trim(), email.trim(), phone);
+      } else {
+        await onLogin(phone);
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect to the account service.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -68,11 +86,77 @@ export function Login({ onLogin, onDemoLogin }: LoginProps) {
         <div className="w-full max-w-md animate-slide-up">
           <div className="mb-8">
             <p className="mb-2 text-sm font-semibold text-brand-600">Member access</p>
-            <h2 className="text-3xl font-extrabold tracking-tight text-ink-900">Welcome back</h2>
-            <p className="mt-2 text-sm leading-6 text-ink-500">Sign in to check your group, contributions, and next payout.</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-ink-900">
+              {mode === 'signin' ? 'Welcome back' : 'Create your account'}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-ink-500">
+              {mode === 'signin'
+                ? 'Sign in with a one-time code to check your group, contributions, and next payout.'
+                : 'Create your profile to get started. Phone verification happens when you sign in.'}
+            </p>
+          </div>
+
+          <div className="mb-5 grid grid-cols-2 rounded-xl border border-ink-200 bg-white p-1" role="tablist" aria-label="Account access">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'signin'}
+              onClick={() => { setMode('signin'); setError(''); }}
+              className={`rounded-lg py-2.5 text-sm font-semibold transition-colors ${mode === 'signin' ? 'bg-brand-700 text-white' : 'text-ink-500 hover:text-ink-800'}`}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'signup'}
+              onClick={() => { setMode('signup'); setError(''); }}
+              className={`rounded-lg py-2.5 text-sm font-semibold transition-colors ${mode === 'signup' ? 'bg-brand-700 text-white' : 'text-ink-500 hover:text-ink-800'}`}
+            >
+              Sign up
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="card p-5 shadow-md sm:p-6">
+            {mode === 'signup' && (
+              <>
+                <div className="mb-5">
+                  <label className="mb-2 block text-sm font-semibold text-ink-700" htmlFor="full-name">
+                    Full name
+                  </label>
+                  <div className="relative">
+                    <UserRound className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-400" size={20} />
+                    <input
+                      id="full-name"
+                      type="text"
+                      autoComplete="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Wanjiru Kamau"
+                      className="input-field pl-12"
+                    />
+                  </div>
+                </div>
+                <div className="mb-5">
+                  <label className="mb-2 block text-sm font-semibold text-ink-700" htmlFor="email">
+                    Email address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-400" size={20} />
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="input-field pl-12"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
             <label className="mb-2 block text-sm font-semibold text-ink-700" htmlFor="phone">
               Phone number
             </label>
@@ -90,27 +174,31 @@ export function Login({ onLogin, onDemoLogin }: LoginProps) {
             </div>
             <button
               type="submit"
-              disabled={phone.trim().length < 3}
+              disabled={phone.trim().length < 3 || (mode === 'signup' && (name.trim().length < 3 || !email.trim())) || isSubmitting}
               className="btn-gold mt-4 flex w-full items-center justify-center gap-2"
             >
-              Continue
+              {isSubmitting ? 'Connecting...' : mode === 'signup' ? 'Create account' : 'Continue with OTP'}
               <ArrowRight size={20} />
             </button>
+            {error && <p className="mt-3 text-sm text-red-600" role="alert">{error}</p>}
 
-            <div className="my-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-ink-100" />
-              <span className="text-xs font-semibold text-ink-400">OR</span>
-              <div className="h-px flex-1 bg-ink-100" />
-            </div>
-
-            <button
-              type="button"
-              onClick={onDemoLogin}
-              className="btn-secondary flex w-full items-center justify-center gap-2"
-            >
-              <Zap size={18} className="text-gold-600" />
-              Explore the demo
-            </button>
+            {mode === 'signin' && (
+              <>
+                <div className="my-6 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-ink-100" />
+                  <span className="text-xs font-semibold text-ink-400">OR</span>
+                  <div className="h-px flex-1 bg-ink-100" />
+                </div>
+                <button
+                  type="button"
+                  onClick={onDemoLogin}
+                  className="btn-secondary flex w-full items-center justify-center gap-2"
+                >
+                  <Zap size={18} className="text-gold-600" />
+                  Explore the demo
+                </button>
+              </>
+            )}
           </form>
 
           <div className="mt-5 flex items-start gap-2 text-xs leading-5 text-ink-400">

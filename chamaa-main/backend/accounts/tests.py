@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import override_settings
+from unittest.mock import patch
 from rest_framework.test import APITestCase
 
 
@@ -90,3 +91,31 @@ class OtpAuthenticationApiTests(APITestCase):
             )
 
         self.assertEqual(response.status_code, 503)
+
+    @override_settings(
+        DEBUG=True,
+        AFRICASTALKING_USERNAME='sandbox',
+        AFRICASTALKING_API_KEY='test-key',
+        AFRICASTALKING_SENDER_ID='',
+    )
+    @patch('accounts.views.send_otp_sms')
+    def test_configured_sms_gateway_receives_code_without_exposing_it(self, send_sms):
+        response = self.client.post(
+            '/api/v1/accounts/otp/request/',
+            {'phone': '0712 345 678'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('debug_code', response.data)
+        send_sms.assert_called_once()
+        sent_phone, sent_code = send_sms.call_args.args
+        self.assertEqual(sent_phone, '+254712345678')
+        self.assertEqual(len(sent_code), 4)
+
+        verify_response = self.client.post(
+            '/api/v1/accounts/otp/verify/',
+            {'phone': '0712 345 678', 'code': sent_code},
+            format='json',
+        )
+        self.assertEqual(verify_response.status_code, 200)

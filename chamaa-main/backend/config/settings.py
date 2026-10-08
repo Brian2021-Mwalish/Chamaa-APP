@@ -89,6 +89,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+AFRICASTALKING_USERNAME = os.environ.get('AFRICASTALKING_USERNAME', '')
+AFRICASTALKING_API_KEY = os.environ.get('AFRICASTALKING_API_KEY', '')
+AFRICASTALKING_SENDER_ID = os.environ.get('AFRICASTALKING_SENDER_ID', '')
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',

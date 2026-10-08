@@ -31,9 +31,21 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    ONBOARDING_STAGES = (
+        ('kyc', 'KYC'),
+        ('plan', 'Plan selection'),
+        ('membership', 'Membership'),
+        ('waiting', 'Waiting room'),
+        ('app', 'Application'),
+    )
+
     phone = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(blank=True)
+    phone_verified = models.BooleanField(default=False)
+    onboarding_stage = models.CharField(
+        max_length=16, choices=ONBOARDING_STAGES, default='kyc'
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

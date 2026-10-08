@@ -2,18 +2,33 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import { Upload, IdCard, FileText, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface KycProps {
-  onComplete: (name: string) => void;
+  initialName?: string;
+  onComplete: (name: string) => Promise<void>;
 }
 
-export function Kyc({ onComplete }: KycProps) {
+export function Kyc({ initialName = '', onComplete }: KycProps) {
   const [step, setStep] = useState<'intro' | 'id' | 'income' | 'review'>('intro');
-  const [fullName, setFullName] = useState('');
+  const [fullName, setFullName] = useState(initialName);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [incomeFile, setIncomeFile] = useState<File | null>(null);
   const [idError, setIdError] = useState('');
   const [incomeError, setIncomeError] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const idInputRef = useRef<HTMLInputElement>(null);
   const incomeInputRef = useRef<HTMLInputElement>(null);
+
+  const saveProfile = async () => {
+    setIsSaving(true);
+    setSubmitError('');
+    try {
+      await onComplete(fullName);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Could not save your profile.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleIdFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -213,9 +228,9 @@ export function Kyc({ onComplete }: KycProps) {
               <div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="text-brand-600" size={44} />
               </div>
-              <h2 className="text-xl font-bold text-ink-900 mb-3">Documents submitted</h2>
+              <h2 className="text-xl font-bold text-ink-900 mb-3">Verification details ready</h2>
               <p className="text-ink-500 mb-8 max-w-xs mx-auto">
-                Your account is now <span className="font-semibold text-gold-600">Pending</span> verification. Our team will review your documents shortly.
+                Your profile will be saved to your account. The selected ID and income files are not uploaded to the backend yet.
               </p>
               <div className="card p-5 text-left mb-6">
                 <div className="flex items-center justify-between mb-3">
@@ -236,12 +251,14 @@ export function Kyc({ onComplete }: KycProps) {
                 </div>
               </div>
               <button
-                onClick={() => onComplete(fullName)}
+                onClick={() => void saveProfile()}
+                disabled={isSaving}
                 className="btn-primary w-full flex items-center justify-center gap-2"
               >
-                Continue to plans
+                {isSaving ? 'Saving profile...' : 'Continue to plans'}
                 <ArrowRight size={20} />
               </button>
+              {submitError && <p className="mt-3 text-sm text-red-600" role="alert">{submitError}</p>}
             </div>
           )}
         </div>

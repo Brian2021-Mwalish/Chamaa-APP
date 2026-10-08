@@ -3,13 +3,19 @@ import { ArrowRight, RotateCcw } from 'lucide-react';
 
 interface OtpProps {
   phone: string;
-  onVerified: () => void;
+  debugCode?: string;
+  onVerified: (code: string) => Promise<void>;
+  onResend: () => Promise<void>;
   onBack: () => void;
 }
 
-export function Otp({ phone, onVerified, onBack }: OtpProps) {
+const OTP_WINDOW_SECONDS = 180;
+
+export function Otp({ phone, debugCode, onVerified, onResend, onBack }: OtpProps) {
   const [digits, setDigits] = useState(['', '', '', '']);
-  const [resendTimer, setResendTimer] = useState(30);
+  const [resendTimer, setResendTimer] = useState(OTP_WINDOW_SECONDS);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [error, setError] = useState('');
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -27,9 +33,7 @@ export function Otp({ phone, onVerified, onBack }: OtpProps) {
     if (value && index < 3) {
       inputsRef.current[index + 1]?.focus();
     }
-    if (next.every((d) => d) && next.join('').length === 4) {
-      setTimeout(() => onVerified(), 300);
-    }
+    setError('');
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
@@ -38,10 +42,28 @@ export function Otp({ phone, onVerified, onBack }: OtpProps) {
     }
   };
 
-  const resend = () => {
-    setResendTimer(30);
+  const verify = async () => {
+    setIsVerifying(true);
+    setError('');
+    try {
+      await onVerified(digits.join(''));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'The verification code could not be checked.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const resend = async () => {
+    setResendTimer(OTP_WINDOW_SECONDS);
     setDigits(['', '', '', '']);
+    setError('');
     inputsRef.current[0]?.focus();
+    try {
+      await onResend();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not request another code.');
+    }
   };
 
   return (
@@ -76,13 +98,14 @@ export function Otp({ phone, onVerified, onBack }: OtpProps) {
           </div>
 
           <button
-            onClick={onVerified}
-            disabled={digits.join('').length < 4}
+            onClick={() => void verify()}
+            disabled={digits.join('').length < 4 || isVerifying}
             className="w-full bg-gold-400 text-ink-900 font-bold rounded-xl py-4 flex items-center justify-center gap-2 transition-all hover:bg-gold-500 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Verify
+            {isVerifying ? 'Verifying...' : 'Verify'}
             <ArrowRight size={20} />
           </button>
+          {error && <p className="mt-3 text-sm text-red-200" role="alert">{error}</p>}
 
           <div className="mt-6 flex items-center justify-center gap-2">
             {resendTimer > 0 ? (
@@ -98,7 +121,9 @@ export function Otp({ phone, onVerified, onBack }: OtpProps) {
           </div>
 
           <p className="text-brand-200 text-xs text-center mt-8">
-            Hint: enter any 4 digits to continue
+            {debugCode
+              ? <>Development code: <span className="font-bold text-gold-300">{debugCode}</span></>
+              : 'Enter the verification code sent to your phone.'}
           </p>
         </div>
       </div>
