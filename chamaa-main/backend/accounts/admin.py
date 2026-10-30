@@ -8,7 +8,7 @@ from .models import KYCSubmission, User
 class AccountCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ('phone',)
+        fields = ('email', 'phone')
 
 
 class AccountChangeForm(UserChangeForm):
@@ -22,22 +22,22 @@ class UserAdmin(DjangoUserAdmin):
     add_form = AccountCreationForm
     form = AccountChangeForm
     fieldsets = (
-        (None, {'fields': ('phone', 'password')}),
-        ('Personal info', {'fields': ('name', 'email', 'selected_plan')}),
+        (None, {'fields': ('email', 'password')}),
+        ('Personal info', {'fields': ('name', 'phone', 'selected_plan')}),
         ('Onboarding', {'fields': ('phone_verified', 'onboarding_stage')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
-        (None, {'classes': ('wide',), 'fields': ('phone', 'password1', 'password2')}),
+        (None, {'classes': ('wide',), 'fields': ('email', 'phone', 'password1', 'password2')}),
     )
     list_display = (
-        'phone', 'name', 'email', 'selected_plan', 'onboarding_stage',
+        'email', 'phone', 'name', 'selected_plan', 'onboarding_stage',
         'phone_verified', 'is_staff', 'is_active'
     )
     list_filter = ('is_staff', 'is_active', 'is_superuser')
-    search_fields = ('phone', 'name', 'email')
-    ordering = ('phone',)
+    search_fields = ('email', 'phone', 'name')
+    ordering = ('email',)
     filter_horizontal = ('groups', 'user_permissions')
 
 

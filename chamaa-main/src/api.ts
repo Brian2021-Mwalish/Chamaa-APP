@@ -4,6 +4,7 @@ export interface AccountProfile {
   email: string;
   selected_plan: 'starter' | 'standard' | 'premium' | '';
   is_staff: boolean;
+  is_admin: boolean;
   phone_verified: boolean;
   onboarding_stage: 'kyc' | 'plan' | 'membership' | 'waiting' | 'app';
 }
@@ -25,37 +26,44 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
 
   const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    const detail =
-      typeof payload === 'object' && payload !== null && 'detail' in payload &&
-      typeof payload.detail === 'string'
-        ? payload.detail
-        : 'The request could not be completed.';
-    throw new Error(detail);
+    let message = 'The request could not be completed.';
+    if (typeof payload === 'object' && payload !== null) {
+      if ('detail' in payload && typeof payload.detail === 'string') {
+        message = payload.detail;
+      } else {
+        const validationMessages = Object.entries(payload).flatMap(([field, value]) => {
+          const errors = Array.isArray(value) ? value : [value];
+          return errors
+            .filter((error): error is string => typeof error === 'string')
+            .map((error) => field === 'non_field_errors' ? error : `${field}: ${error}`);
+        });
+        if (validationMessages.length > 0) message = validationMessages.join(' ');
+      }
+    }
+    throw new Error(message);
   }
 
   return payload as T;
 }
 
-export function requestOtp(phone: string): Promise<{ debug_code?: string }> {
-  return apiRequest('/accounts/otp/request/', {
-    method: 'POST',
-    body: JSON.stringify({ phone }),
-  });
-}
-
-export async function signupAccount(name: string, email: string, phone: string): Promise<AccountProfile> {
+export async function signupAccount(
+  name: string,
+  email: string,
+  password: string,
+  phone: string,
+): Promise<AccountProfile> {
   const result = await apiRequest<{ token: string; user: AccountProfile }>(
     '/accounts/signup/',
-    { method: 'POST', body: JSON.stringify({ name, email, phone }) },
+    { method: 'POST', body: JSON.stringify({ name, email, password, phone }) },
   );
   sessionStorage.setItem(TOKEN_STORAGE_KEY, result.token);
   return result.user;
 }
 
-export async function verifyOtp(phone: string, code: string): Promise<AccountProfile> {
+export async function loginAccount(email: string, password: string): Promise<AccountProfile> {
   const result = await apiRequest<{ token: string; user: AccountProfile }>(
-    '/accounts/otp/verify/',
-    { method: 'POST', body: JSON.stringify({ phone, code }) },
+    '/accounts/login/',
+    { method: 'POST', body: JSON.stringify({ email, password }) },
   );
   sessionStorage.setItem(TOKEN_STORAGE_KEY, result.token);
   return result.user;
@@ -69,11 +77,13 @@ export async function submitKyc(data: {
   fullName: string;
   idDocument: File;
   incomeDocument: File;
+  paymentMode: 'manual' | 'direct_debit';
 }): Promise<AccountProfile> {
   const formData = new FormData();
   formData.append('full_name', data.fullName);
   formData.append('id_document', data.idDocument);
   formData.append('income_document', data.incomeDocument);
+  formData.append('payment_mode', data.paymentMode);
   const result = await apiRequest<{ user: AccountProfile }>('/accounts/kyc/submit/', {
     method: 'POST',
     body: formData,
@@ -105,4 +115,121 @@ export async function logoutAccount(): Promise<void> {
 
 export function clearAuthToken(): void {
   sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+}
+
+export interface AdminAccount {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  plan: string;
+  payment_mode: 'manual' | 'direct_debit';
+  onboarding_stage: AccountProfile['onboarding_stage'];
+  kyc_status: 'pending' | 'approved' | 'rejected' | 'not_submitted';
+  kyc_full_name: string;
+  kyc_submitted_at: string | null;
+  id_document_uploaded: boolean;
+  income_document_uploaded: boolean;
+  is_active: boolean;
+  is_staff: boolean;
+  is_admin: boolean;
+  date_joined: string;
+}
+
+export function getAdminUsers(): Promise<AdminAccount[]> {
+  return apiRequest<AdminAccount[]>('/accounts/admin/users/');
+}
+
+export function setAdminUserActive(userId: number, isActive: boolean): Promise<AdminAccount> {
+  return apiRequest<AdminAccount>(`/accounts/admin/users/${userId}/status/`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active: isActive }),
+  });
+}
+
+export interface AdminCircleMember {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  rotation_order: number | null;
+  is_active: boolean;
+  joined_at: string;
+}
+
+export interface AdminCircle {
+  id: number;
+  name: string;
+  circle_type: 'managed' | 'private';
+  plan_tier: 'starter' | 'standard' | 'premium' | '';
+  visibility: 'public' | 'private';
+  created_by: string | null;
+  contribution_amount: number;
+  cadence: 'weekly' | 'monthly';
+  max_members: number;
+  membership_fee_percent: string;
+  security_buffer_months: number;
+  status: 'forming' | 'active' | 'completed' | 'paused';
+  member_count: number;
+  is_member: boolean;
+  created_at: string;
+  members: AdminCircleMember[];
+}
+
+export interface AdminGroupActivity {
+  id: string;
+  kind: string;
+  group_id: number;
+  group_name: string;
+  description: string;
+  occurred_at: string;
+}
+
+export interface AdminGroupOverview {
+  groups: AdminCircle[];
+  activity: AdminGroupActivity[];
+}
+
+export function getAdminGroupOverview(): Promise<AdminGroupOverview> {
+  return apiRequest<AdminGroupOverview>('/groups/admin/overview/');
+}
+
+export function createManagedCircle(data: {
+  name: string;
+  plan_tier: 'starter' | 'standard' | 'premium';
+  contribution_amount: number;
+  cadence: 'weekly' | 'monthly';
+  max_members: 4 | 5;
+}): Promise<Omit<AdminCircle, 'members'>> {
+  return apiRequest<Omit<AdminCircle, 'members'>>('/groups/circles/', {
+    method: 'POST',
+    body: JSON.stringify({ ...data, circle_type: 'managed', visibility: 'public' }),
+  });
+}
+
+export function reviewAdminKyc(
+  userId: number,
+  status: 'approved' | 'rejected',
+): Promise<AdminAccount> {
+  return apiRequest<AdminAccount>(`/accounts/admin/users/${userId}/kyc/`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function getAdminKycDocument(
+  userId: number,
+  documentType: 'id' | 'income',
+): Promise<{ url: string; contentType: string }> {
+  const token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  const response = await fetch(
+    `${API_BASE_URL}/accounts/admin/users/${userId}/kyc/documents/${documentType}/`,
+    { headers: token ? { Authorization: `Token ${token}` } : undefined },
+  );
+  if (!response.ok) throw new Error('Could not open this private document.');
+  const blob = await response.blob();
+  return {
+    url: URL.createObjectURL(blob),
+    contentType: response.headers.get('Content-Type') || blob.type,
+  };
 }

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Login } from '@/screens/Login';
-import { Otp } from '@/screens/Otp';
 import { Kyc } from '@/screens/Kyc';
 import { PlanSelection } from '@/screens/PlanSelection';
 import { Membership } from '@/screens/Membership';
@@ -13,14 +12,12 @@ import { WalletScreen } from '@/screens/WalletScreen';
 import { ServicesScreen } from '@/screens/ServicesScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { AdminDashboard } from '@/screens/AdminDashboard';
-import { advanceOnboarding, clearAuthToken, getCurrentUser, logoutAccount, requestOtp, signupAccount, submitKyc, updateCurrentUser, verifyOtp } from '@/api';
+import { advanceOnboarding, clearAuthToken, getCurrentUser, loginAccount, logoutAccount, signupAccount, submitKyc, updateCurrentUser } from '@/api';
 import { createInitialUser, createDemoUser, PLANS, type AppStage, type Screen, type Plan, type User, type ChatMessage } from '@/types';
 
 function App() {
   const [stage, setStage] = useState<AppStage>('login');
   const [screen, setScreen] = useState<Screen>('home');
-  const [phone, setPhone] = useState('');
-  const [otpCode, setOtpCode] = useState('');
   const [user, setUser] = useState<User>(createInitialUser);
   const [restoringSession, setRestoringSession] = useState(true);
   const [onboardingError, setOnboardingError] = useState('');
@@ -30,14 +27,13 @@ function App() {
     getCurrentUser()
       .then((profile) => {
         if (!profile || cancelled) return;
-        setPhone(profile.phone);
         setUser((currentUser) => ({
           ...currentUser,
           name: profile.name,
           phone: profile.phone,
           plan: PLANS.find((plan) => plan.id === profile.selected_plan) ?? currentUser.plan,
         }));
-        setStage(profile.is_staff ? 'admin' : profile.onboarding_stage);
+        setStage(profile.is_admin ? 'admin' : profile.onboarding_stage);
       })
       .catch(clearAuthToken)
       .finally(() => {
@@ -46,16 +42,19 @@ function App() {
     return () => { cancelled = true; };
   }, []);
 
-  const handleLogin = async (p: string) => {
-    const result = await requestOtp(p);
-    setPhone(p);
-    setOtpCode(result.debug_code ?? '');
-    setStage('otp');
+  const handleLogin = async (email: string, password: string) => {
+    const profile = await loginAccount(email, password);
+    setUser((currentUser) => ({
+      ...currentUser,
+      name: profile.name,
+      phone: profile.phone,
+      plan: PLANS.find((plan) => plan.id === profile.selected_plan) ?? currentUser.plan,
+    }));
+    setStage(profile.is_admin ? 'admin' : profile.onboarding_stage);
   };
 
-  const handleSignUp = async (name: string, email: string, p: string) => {
-    const profile = await signupAccount(name, email, p);
-    setPhone(profile.phone);
+  const handleSignUp = async (name: string, email: string, password: string, phone: string) => {
+    const profile = await signupAccount(name, email, password, phone);
     setUser((currentUser) => ({
       ...currentUser,
       name: profile.name,
@@ -72,22 +71,7 @@ function App() {
     setScreen('home');
   };
 
-  const handleOtpVerified = async (code: string) => {
-    const profile = await verifyOtp(phone, code);
-    setUser((currentUser) => ({
-      ...currentUser,
-      name: profile.name,
-      phone: profile.phone,
-    }));
-    setStage(profile.is_staff ? 'admin' : profile.onboarding_stage);
-  };
-
-  const handleResendOtp = async () => {
-    const result = await requestOtp(phone);
-    setOtpCode(result.debug_code ?? '');
-  };
-
-  const handleKycComplete = async (data: { fullName: string; idDocument: File; incomeDocument: File }) => {
+  const handleKycComplete = async (data: { fullName: string; idDocument: File; incomeDocument: File; paymentMode: 'manual' | 'direct_debit' }) => {
     const profile = await submitKyc(data);
     setUser((u) => ({ ...u, name: profile.name, phone: profile.phone, verification: 'pending' }));
     setStage(profile.onboarding_stage);
@@ -108,7 +92,6 @@ function App() {
   const handleMembershipComplete = async () => {
     try {
       const profile = await advanceOnboarding();
-      setUser((u) => ({ ...u, membershipPaid: true, verification: 'verified' }));
       setOnboardingError('');
       setStage(profile.onboarding_stage);
     } catch (error) {
@@ -157,7 +140,6 @@ function App() {
     void logoutAccount().catch(() => clearAuthToken());
     setUser(createInitialUser());
     setStage('login');
-    setPhone('');
   };
 
   const onboardingAlert = onboardingError ? (
@@ -169,7 +151,6 @@ function App() {
   const handleAdminLogout = () => {
     void logoutAccount().catch(() => clearAuthToken());
     setStage('login');
-    setPhone('');
   };
 
   if (restoringSession) {
@@ -178,7 +159,6 @@ function App() {
 
   if (stage === 'admin') return <AdminDashboard onLogout={handleAdminLogout} />;
   if (stage === 'login') return <Login onLogin={handleLogin} onSignUp={handleSignUp} onDemoLogin={handleDemoLogin} />;
-  if (stage === 'otp') return <Otp phone={phone} debugCode={otpCode} onVerified={handleOtpVerified} onResend={handleResendOtp} onBack={() => setStage('login')} />;
   if (stage === 'kyc') return <Kyc initialName={user.name} onComplete={handleKycComplete} />;
   if (stage === 'plan') return <><PlanSelection onSelect={handlePlanSelect} />{onboardingAlert}</>;
   if (stage === 'membership') return <><Membership plan={user.plan} onComplete={handleMembershipComplete} />{onboardingAlert}</>;

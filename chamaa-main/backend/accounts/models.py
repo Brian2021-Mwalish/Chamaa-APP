@@ -19,11 +19,12 @@ def kyc_document_path(instance, filename):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, phone, password=None, **extra_fields):
-        if not phone or not phone.strip():
-            raise ValueError('A phone number is required.')
+    def create_user(self, email, password=None, phone='', **extra_fields):
+        if not email or not email.strip():
+            raise ValueError('An email address is required.')
 
-        user = self.model(phone=phone.strip(), **extra_fields)
+        email = self.normalize_email(email).lower()
+        user = self.model(email=email, phone=phone.strip(), **extra_fields)
         if password:
             user.set_password(password)
         else:
@@ -31,7 +32,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone, password, **extra_fields):
+    def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
@@ -41,7 +42,7 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('A superuser must have is_superuser=True.')
 
-        return self.create_user(phone, password, **extra_fields)
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -49,6 +50,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('starter', 'Starter'),
         ('standard', 'Standard'),
         ('premium', 'Premium'),
+    )
+    PAYMENT_MODE_CHOICES = (
+        ('manual', 'Manual processing'),
+        ('direct_debit', 'Automatic direct debit'),
     )
     ONBOARDING_STAGES = (
         ('kyc', 'KYC'),
@@ -58,10 +63,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('app', 'Application'),
     )
 
-    phone = models.CharField(max_length=32, unique=True)
+    phone = models.CharField(max_length=32, blank=True, default='')
     name = models.CharField(max_length=150, blank=True)
-    email = models.EmailField(blank=True)
+    email = models.EmailField(blank=True, null=True, unique=True)
     selected_plan = models.CharField(max_length=20, choices=PLAN_CHOICES, blank=True)
+    payment_mode = models.CharField(
+        max_length=12, choices=PAYMENT_MODE_CHOICES, default='manual'
+    )
     phone_verified = models.BooleanField(default=False)
     onboarding_stage = models.CharField(
         max_length=16, choices=ONBOARDING_STAGES, default='kyc'
@@ -72,11 +80,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'phone'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('phone',), condition=~models.Q(phone=''), name='unique_nonempty_user_phone'
+            ),
+        ]
+
     def __str__(self):
-        return self.phone
+        return self.email or self.phone
 
 
 class KYCSubmission(models.Model):
@@ -108,3 +123,5 @@ class KYCSubmission(models.Model):
 
     def __str__(self):
         return f'KYC for {self.user.phone} ({self.status})'
+
+

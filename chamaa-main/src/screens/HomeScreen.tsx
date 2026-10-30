@@ -1,4 +1,4 @@
-import { TrendingUp, Users, ArrowRight, CheckCircle2, Clock, Wallet, Sparkles, Landmark, WalletCards, Handshake } from 'lucide-react';
+import { TrendingUp, Users, ArrowRight, CheckCircle2, Clock, Wallet, Sparkles, Landmark, WalletCards, Handshake, ShieldCheck, AlertTriangle, Bell } from 'lucide-react';
 import { type User, formatKES } from '@/types';
 import type { Screen } from '@/types';
 
@@ -125,6 +125,54 @@ export function HomeScreen({ user, onNavigate }: HomeScreenProps) {
             ))}
           </div>
         </div>
+
+        <section className="mb-5" aria-labelledby="circle-safeguards-title">
+          <div className="mb-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">Know how it works</p>
+            <h2 id="circle-safeguards-title" className="mt-1 text-lg font-extrabold text-ink-900">Circle safeguards & automation</h2>
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <div className="card p-5">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={19} className="text-brand-700" />
+                <h3 className="font-bold text-ink-900">If a contribution is missed</h3>
+              </div>
+              <ul className="mt-3 space-y-3 text-sm leading-5 text-ink-600">
+                <li><strong className="text-ink-800">One missed payment:</strong> the overdue amount is deducted from your next payout.</li>
+                <li><strong className="text-ink-800">Five misses in a row:</strong> you are removed from the circle to protect other members.</li>
+                <li>A shared safety jar can help support the group when someone falls behind.</li>
+              </ul>
+            </div>
+            <div className="card p-5">
+              <div className="flex items-center gap-2">
+                <Bell size={19} className="text-brand-700" />
+                <h3 className="font-bold text-ink-900">Helpful automation</h3>
+              </div>
+              <ul className="mt-3 space-y-2 text-sm leading-5 text-ink-600">
+                <li>Find a circle that matches your preferred contribution and group size.</li>
+                <li>Make on-time payments from a linked card, if you authorize it, and notify you when your turn is near or a member pays.</li>
+                <li>Move agreed savings into the safety jar automatically.</li>
+                <li>Track the payout queue and show your place in line.</li>
+                <li>Estimate how much you may be able to borrow based on your savings.</li>
+              </ul>
+              <p className="mt-3 border-t border-ink-100 pt-3 text-xs leading-5 text-ink-500">
+                Any automatic payment would only happen after onboarding, with your permission and an authorized payment method.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-col gap-3 rounded-xl border border-gold-200 bg-gold-50 p-4 sm:flex-row sm:items-center">
+            <AlertTriangle size={19} className="shrink-0 text-gold-700" />
+            <p className="flex-1 text-sm leading-5 text-gold-900">
+              Choose an amount you can afford and read the circle rules before joining. Missed payments can affect everyone, and saving or lending may be subject to local laws.
+            </p>
+            <button
+              onClick={() => onNavigate('wallet')}
+              className="shrink-0 text-left text-sm font-semibold text-brand-700 hover:text-brand-800"
+            >
+              View transaction history <ArrowRight size={14} className="inline" />
+            </button>
+          </div>
+        </section>
 
         <section className="mb-4">
           <div className="mb-3 flex items-center justify-between">

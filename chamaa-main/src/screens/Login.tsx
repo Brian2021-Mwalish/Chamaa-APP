@@ -1,31 +1,34 @@
 import { useState } from 'react';
-import { Phone, UserRound, Mail, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { UserRound, Mail, LockKeyhole, Eye, EyeOff, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { LandingPage } from '@/screens/LandingPage';
 
 interface LoginProps {
-  onLogin: (phone: string) => Promise<void>;
-  onSignUp: (name: string, email: string, phone: string) => Promise<void>;
+  onLogin: (email: string, password: string) => Promise<void>;
+  onSignUp: (name: string, email: string, password: string, phone: string) => Promise<void>;
   onDemoLogin: () => void;
 }
 
 export function Login({ onLogin, onSignUp, onDemoLogin }: LoginProps) {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup' | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.trim().length < 3) return;
-    if (mode === 'signup' && (name.trim().length < 3 || !email.trim())) return;
+    if (!email.trim() || !password) return;
+    if (mode === 'signup' && (name.trim().length < 3 || phone.trim().length < 7)) return;
     setIsSubmitting(true);
     setError('');
     try {
       if (mode === 'signup') {
-        await onSignUp(name.trim(), email.trim(), phone);
+        await onSignUp(name.trim(), email.trim(), password, phone.trim());
       } else {
-        await onLogin(phone);
+        await onLogin(email.trim(), password);
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Could not connect to the account service.');
@@ -33,6 +36,15 @@ export function Login({ onLogin, onSignUp, onDemoLogin }: LoginProps) {
       setIsSubmitting(false);
     }
   };
+
+  if (!mode) {
+    return (
+      <LandingPage
+        onLogin={() => setMode('signin')}
+        onSignUp={() => setMode('signup')}
+      />
+    );
+  }
 
   return (
     <div className="min-h-[100dvh] bg-ink-50 text-ink-900 lg:grid lg:grid-cols-[1.1fr_0.9fr]">
@@ -44,11 +56,16 @@ export function Login({ onLogin, onSignUp, onDemoLogin }: LoginProps) {
           backgroundSize: 'cover',
         }}
       >
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold-400 shadow-lg">
-            <span className="text-xl font-extrabold text-ink-900">C</span>
+        <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold-400 shadow-lg">
+              <span className="text-xl font-extrabold text-ink-900">C</span>
+            </div>
+            <span className="text-lg font-extrabold tracking-tight">Chama</span>
           </div>
-          <span className="text-lg font-extrabold tracking-tight">Chama</span>
+          <button type="button" onClick={() => setMode(null)} className="rounded-lg px-3 py-2 text-sm font-semibold text-white hover:bg-white/10">
+            Back to home
+          </button>
         </div>
 
         <div className="relative z-10 mt-16 max-w-xl animate-slide-up lg:mt-0">
@@ -91,8 +108,8 @@ export function Login({ onLogin, onSignUp, onDemoLogin }: LoginProps) {
             </h2>
             <p className="mt-2 text-sm leading-6 text-ink-500">
               {mode === 'signin'
-                ? 'Sign in with a one-time code to check your group, contributions, and next payout.'
-                : 'Create your profile to get started. Phone verification happens when you sign in.'}
+                ? 'Sign in to check your circles, contributions, and upcoming payouts.'
+                : 'Create your member profile with an email address and password.'}
             </p>
           </div>
 
@@ -157,27 +174,81 @@ export function Login({ onLogin, onSignUp, onDemoLogin }: LoginProps) {
                 </div>
               </>
             )}
-            <label className="mb-2 block text-sm font-semibold text-ink-700" htmlFor="phone">
-              Phone number
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-400" size={20} />
-              <input
-                id="phone"
-                type="tel"
-                inputMode="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="0712 345 678"
-                className="input-field pl-12 text-lg"
-              />
+            {mode === 'signin' && (
+              <div className="mb-5">
+                <label className="mb-2 block text-sm font-semibold text-ink-700" htmlFor="signin-email">
+                  Email address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-400" size={20} />
+                  <input
+                    id="signin-email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="input-field pl-12"
+                  />
+                </div>
+              </div>
+            )}
+            {mode === 'signup' && (
+              <div className="mb-5">
+                <label className="mb-2 block text-sm font-semibold text-ink-700" htmlFor="signup-phone">
+                  Phone number
+                </label>
+                <div className="relative">
+                  <input
+                    id="signup-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    required
+                    minLength={7}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="0712 345 678"
+                    className="input-field"
+                  />
+                </div>
+              </div>
+            )}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-ink-700" htmlFor="password">
+                Password
+              </label>
+              <div className="relative">
+                <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-400" size={20} />
+                <input
+                  id="password"
+                  type={passwordVisible ? 'text' : 'password'}
+                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                  minLength={8}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className="input-field pl-12 pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPasswordVisible((visible) => !visible)}
+                  aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                  aria-pressed={passwordVisible}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-ink-400 hover:bg-ink-100 hover:text-ink-700"
+                >
+                  {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <button
               type="submit"
-              disabled={phone.trim().length < 3 || (mode === 'signup' && (name.trim().length < 3 || !email.trim())) || isSubmitting}
+              disabled={!email.trim() || !password || (mode === 'signup' && (name.trim().length < 3 || phone.trim().length < 7)) || isSubmitting}
               className="btn-gold mt-4 flex w-full items-center justify-center gap-2"
             >
-              {isSubmitting ? 'Connecting...' : mode === 'signup' ? 'Create account' : 'Continue with OTP'}
+              {isSubmitting ? 'Connecting...' : mode === 'signup' ? 'Create account' : 'Sign in'}
               <ArrowRight size={20} />
             </button>
             {error && <p className="mt-3 text-sm text-red-600" role="alert">{error}</p>}
@@ -203,7 +274,7 @@ export function Login({ onLogin, onSignUp, onDemoLogin }: LoginProps) {
 
           <div className="mt-5 flex items-start gap-2 text-xs leading-5 text-ink-400">
             <ShieldCheck size={16} className="mt-0.5 shrink-0 text-brand-600" />
-            <span>Your number is used only to secure your Chama account.</span>
+            <span>Your password is securely hashed and never stored as plain text.</span>
           </div>
         </div>
       </section>

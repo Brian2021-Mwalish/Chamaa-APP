@@ -5,7 +5,6 @@ export type VerificationStatus = 'pending' | 'verified';
 export type AppStage =
   | 'login'
   | 'admin'
-  | 'otp'
   | 'kyc'
   | 'plan'
   | 'membership'

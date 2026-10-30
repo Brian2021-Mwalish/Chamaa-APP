@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { Check, ArrowRight, Crown, ShieldCheck, Smartphone, CircleDollarSign } from 'lucide-react';
-import { MEMBERSHIP_FEE, formatKES, type Plan } from '@/types';
+import { ArrowRight, Info, ShieldCheck } from 'lucide-react';
+import { formatKES, type Plan } from '@/types';
 
 interface MembershipProps {
   plan: Plan;
@@ -8,179 +7,46 @@ interface MembershipProps {
 }
 
 export function Membership({ plan, onComplete }: MembershipProps) {
-  const [paid, setPaid] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'usdt'>('mpesa');
-  const [mpesaPhone, setMpesaPhone] = useState('');
-  const [paymentError, setPaymentError] = useState('');
-
-  const handleDemoPayment = () => {
-    if (paymentMethod === 'mpesa' && mpesaPhone.replace(/\D/g, '').length < 9) {
-      setPaymentError('Enter a valid M-Pesa phone number.');
-      return;
-    }
-    setPaymentError('');
-    setPaid(true);
-  };
-
-  if (paid) {
-    return (
-      <div className="min-h-screen bg-ink-50 flex flex-col items-center justify-center px-6">
-        <div className="max-w-md w-full text-center animate-fade-in">
-          <div className="w-24 h-24 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="text-brand-600" size={52} />
-          </div>
-          <h1 className="text-2xl font-extrabold text-ink-900 mb-3">Demo payment recorded</h1>
-          <p className="text-ink-500 mb-8 max-w-xs mx-auto">
-            No real payment was sent or verified. Continue to preview the next onboarding step.
-          </p>
-          <button onClick={onComplete} className="btn-primary w-full flex items-center justify-center gap-2">
-            Find my group
-            <ArrowRight size={20} />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-ink-50 flex flex-col">
-      <div className="bg-brand-700 pt-12 pb-8 px-6">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center gap-2 text-brand-100 text-sm mb-2">
-            <Crown size={16} />
-            <span>Chama Membership</span>
+    <div className="min-h-screen bg-ink-50 text-ink-900">
+      <header className="bg-brand-800 px-5 pb-24 pt-8 text-white sm:px-8">
+        <div className="mx-auto max-w-3xl">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 text-sm font-semibold text-brand-100">
+              <ShieldCheck size={17} /> Chama Membership
+            </span>
+            <span className="text-xs font-semibold text-brand-200">Membership setup</span>
           </div>
-          <h1 className="text-white text-2xl font-extrabold">
-            Activate your membership
-          </h1>
-          <p className="text-brand-100 text-sm mt-2">
-            A one-time fee to join the Chama platform. This is separate from your monthly group contribution.
+          <h1 className="mt-7 text-3xl font-extrabold">Review your membership setup</h1>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-brand-100">
+            Confirm your plan before we look for a circle that fits.
           </p>
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 px-6 py-8">
-        <div className="max-w-md mx-auto">
-          <div className="card overflow-hidden mb-6">
-            <div className="bg-brand-700 p-6 text-center">
-              <p className="text-brand-100 text-sm mb-1">Membership Fee</p>
-              <p className="text-white text-4xl font-extrabold">{formatKES(MEMBERSHIP_FEE)}</p>
-              <p className="text-brand-200 text-sm mt-1">One-time payment</p>
+      <main className="mx-auto -mt-14 max-w-3xl px-4 pb-12 sm:px-6">
+        <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+          <section className="rounded-xl border border-ink-200 bg-white p-5 shadow-sm sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-wider text-brand-700">Your selected plan</p>
+            <h2 className="mt-2 text-xl font-extrabold">{plan.name}</h2>
+            <p className="mt-1 text-sm text-ink-500">{formatKES(plan.monthly)} per cycle · {formatKES(plan.payout)} payout</p>
+            <div className="mt-5 flex items-start gap-3 rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm leading-6 text-brand-900">
+              <Info size={18} className="mt-0.5 shrink-0" />
+              <p>No payment is collected during onboarding. Contributions only begin after your circle is ready and its cycle starts.</p>
             </div>
-            <div className="p-5">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-ink-700">
-                  <Check size={16} className="text-brand-500" />
-                  Official platform membership
-                </div>
-                <div className="flex items-center gap-2 text-sm text-ink-700">
-                  <Check size={16} className="text-brand-500" />
-                  Eligible to join savings groups
-                </div>
-                <div className="flex items-center gap-2 text-sm text-ink-700">
-                  <Check size={16} className="text-brand-500" />
-                  Access to group chat and payouts
-                </div>
-                <div className="flex items-center gap-2 text-sm text-ink-700">
-                  <Check size={16} className="text-brand-500" />
-                  Built-in credit safety net
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card p-5 mb-6">
-            <p className="text-sm text-ink-500 mb-3">Payment summary</p>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-ink-700">Membership fee</span>
-              <span className="font-semibold text-ink-900">{formatKES(MEMBERSHIP_FEE)}</span>
-            </div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-ink-700">Your plan</span>
-              <span className="font-semibold text-ink-900">{plan.name}</span>
-            </div>
-            <div className="flex items-center justify-between pt-3 border-t border-ink-100">
-              <span className="text-ink-700">Monthly contribution (paid later)</span>
-              <span className="font-semibold text-ink-900">{formatKES(plan.monthly)}</span>
-            </div>
-          </div>
-
-          <div className="mb-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Payment method">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={paymentMethod === 'mpesa'}
-              onClick={() => { setPaymentMethod('mpesa'); setPaymentError(''); }}
-              className={`flex min-h-20 items-center gap-3 rounded-lg border p-4 text-left transition-colors ${paymentMethod === 'mpesa' ? 'border-brand-600 bg-brand-50 ring-1 ring-brand-600' : 'border-ink-200 bg-white hover:border-brand-300'}`}
-            >
-              <Smartphone className="shrink-0 text-brand-700" size={22} />
-              <span>
-                <span className="block font-semibold text-ink-900">M-Pesa</span>
-                <span className="text-xs text-ink-500">Pay in KES</span>
-              </span>
+            <button onClick={onComplete} className="btn-primary mt-5 flex w-full items-center justify-center gap-2">
+              Continue to circle matching <ArrowRight size={18} />
             </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={paymentMethod === 'usdt'}
-              onClick={() => { setPaymentMethod('usdt'); setPaymentError(''); }}
-              className={`flex min-h-20 items-center gap-3 rounded-lg border p-4 text-left transition-colors ${paymentMethod === 'usdt' ? 'border-brand-600 bg-brand-50 ring-1 ring-brand-600' : 'border-ink-200 bg-white hover:border-brand-300'}`}
-            >
-              <CircleDollarSign className="shrink-0 text-brand-700" size={22} />
-              <span>
-                <span className="block font-semibold text-ink-900">USDT</span>
-                <span className="text-xs text-ink-500">Pay in USD</span>
-              </span>
-            </button>
-          </div>
+          </section>
 
-          {paymentMethod === 'mpesa' ? (
-            <div className="mb-5">
-              <label htmlFor="mpesa-phone" className="mb-2 block text-sm font-semibold text-ink-700">
-                M-Pesa phone number
-              </label>
-              <input
-                id="mpesa-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                value={mpesaPhone}
-                onChange={(event) => { setMpesaPhone(event.target.value); setPaymentError(''); }}
-                placeholder="0712 345 678"
-                className="input-field"
-              />
-              <p className="mt-1 text-xs text-ink-400">Enter the number registered with M-Pesa for the payment request.</p>
-            </div>
-          ) : (
-            <div className="mb-5 rounded-lg border border-ink-200 bg-white p-4">
-              <p className="font-semibold text-ink-900">USDT payment</p>
-              <p className="mt-1 text-sm text-ink-500">
-                The USD amount and receiving wallet will be shown when a USDT checkout is connected. For now, this is a demo only.
-              </p>
-            </div>
-          )}
-
-          {paymentError && <p className="mb-4 text-sm text-red-600" role="alert">{paymentError}</p>}
-
-          <div className="flex items-center gap-2 text-sm text-ink-400 mb-2 justify-center">
-            <ShieldCheck size={16} />
-            <span>Payment processing is not connected yet</span>
-          </div>
-          <p className="mb-2 text-center text-xs text-ink-400">Demo only: this screen does not send or verify payments.</p>
+          <aside className="rounded-xl border border-ink-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 font-bold text-ink-900"><ShieldCheck size={18} className="text-brand-700" /> Before you join</div>
+            <p className="mt-3 text-sm leading-6 text-ink-600">
+              You can review your circle rules and payment schedule before any contribution is due. No card is charged and no money moves on this screen.
+            </p>
+          </aside>
         </div>
-      </div>
-
-      <div className="sticky bottom-0 bg-white border-t border-ink-100 px-6 py-4">
-        <div className="max-w-md mx-auto">
-          <button
-            onClick={handleDemoPayment}
-            className="btn-primary w-full flex items-center justify-center gap-2"
-          >
-            Preview {paymentMethod === 'mpesa' ? 'M-Pesa' : 'USDT'} payment
-            <ArrowRight size={20} />
-          </button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

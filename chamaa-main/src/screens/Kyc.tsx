@@ -1,10 +1,10 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Upload, IdCard, FileText, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Upload, IdCard, FileText, CheckCircle2, ArrowRight, ShieldCheck, Wallet } from 'lucide-react';
 
 interface KycProps {
   initialName?: string;
-  onComplete: (data: { fullName: string; idDocument: File; incomeDocument: File }) => Promise<void>;
+  onComplete: (data: { fullName: string; idDocument: File; incomeDocument: File; paymentMode: 'manual' | 'direct_debit' }) => Promise<void>;
 }
 
 export function Kyc({ initialName = '', onComplete }: KycProps) {
@@ -12,6 +12,7 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
   const [fullName, setFullName] = useState(initialName);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [incomeFile, setIncomeFile] = useState<File | null>(null);
+  const [paymentMode, setPaymentMode] = useState<'manual' | 'direct_debit'>('manual');
   const [idError, setIdError] = useState('');
   const [incomeError, setIncomeError] = useState('');
   const [submitError, setSubmitError] = useState('');
@@ -30,6 +31,7 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
         fullName,
         idDocument: idFile,
         incomeDocument: incomeFile,
+        paymentMode,
       });
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Could not save your profile.');
@@ -128,6 +130,28 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
                   className="input-field"
                 />
               </div>
+              <fieldset className="mb-6">
+                <legend className="mb-2 text-sm font-semibold text-ink-700">Contribution payment mode</legend>
+                <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Contribution payment mode">
+                  {([
+                    ['manual', 'Manual processing'],
+                    ['direct_debit', 'Automatic direct debit'],
+                  ] as const).map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      role="radio"
+                      aria-checked={paymentMode === mode}
+                      onClick={() => setPaymentMode(mode)}
+                      className={`min-h-20 rounded-lg border p-3 text-left text-sm font-semibold ${paymentMode === mode ? 'border-brand-600 bg-brand-50 text-brand-800 ring-1 ring-brand-600' : 'border-ink-200 bg-white text-ink-600'}`}
+                    >
+                      <Wallet size={18} className="mb-2" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-ink-400">Direct debit is an opt-in preference and will require a linked payment method before any automatic collection.</p>
+              </fieldset>
               <button
                 onClick={() => setStep('id')}
                 disabled={fullName.trim().length < 3}
@@ -253,6 +277,12 @@ export function Kyc({ initialName = '', onComplete }: KycProps) {
                   <span className="text-sm text-ink-500">Proof of income</span>
                   <span className="font-semibold text-brand-600 flex items-center gap-1">
                     <CheckCircle2 size={16} /> {incomeFile?.name}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-ink-100 pt-3">
+                  <span className="text-sm text-ink-500">Contribution payment mode</span>
+                  <span className="font-semibold text-ink-900">
+                    {paymentMode === 'direct_debit' ? 'Automatic direct debit (opt-in)' : 'Manual processing'}
                   </span>
                 </div>
               </div>
